@@ -216,6 +216,8 @@ gr_iconv_new(lua_State *L) {
 
  lua_setmetatable(L, -2);
 
+ lua_remove(L, -2);
+
  return 1;
 }
 
