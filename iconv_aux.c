@@ -211,7 +211,7 @@ gr_iconv_new(lua_State *L) {
  lua_pushcfunction(L, &gr_iconv_gc);
  lua_setfield(L, -2, "__gc");
 
- lua_getglobal(L, "iconv");
+ lua_pushvalue(L, -3);
  lua_setfield(L, -2, "__index");
 
  lua_setmetatable(L, -2);
