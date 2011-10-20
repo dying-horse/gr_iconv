@@ -2,6 +2,7 @@ local coroutine    = coroutine
 local iconv        = iconv
 local source       = source
 
+local print = print
 
 --- <p>Unterklasse der Klasse <code>source</code> aus dem
 --   Lua-Package <code>gr_source</code></p>
@@ -29,33 +30,38 @@ module "iconv.source"
 function new(self, src, opt)
  local lopt = opt or {}
  local iconvstate = lopt.iconvstate or iconv:new()
+ local status = ""
+ local function set_status(s)
+  status = s
+ end
  local co = coroutine.create(
    function()
-    while  (ret == "pull")
+    while  (status == "pull")
     do     coroutine.yield(iconvstate:pull())
-           ret = iconvstate:go()
+           status = iconvstate:go()
     end
 
     for inbuf in src
     do   iconvstate:push(inbuf)
-         ret = iconvstate:go()
+         status = iconvstate:go()
 
-         while  (ret == "pull")
+         while  (status == "pull")
          do     coroutine.yield(iconvstate:pull())
-                ret = iconvstate:go()
+                status = iconvstate:go()
          end
 
-         if     (ret == "ok")
+         if     (status == "ok")
          then   coroutine.yield(iconvstate:pull())
          end
 
-         if     (ret == "err")
+         if     (status == "err")
          then   break
          end
     end
    end )
  local ret = source.new(self, co)
- ret.opt   = lopt
+ ret.set_status = set_status
+ ret.opt        = lopt
  ret.iconvstate = iconvstate
  return ret
 end
@@ -66,5 +72,5 @@ end
 --  @param from Quellzeichensatz, Zeichenkette
 --  @param to   Zielzeichensatz, Zeichenkette
 function setencoding(self, from, to)
- self.iconvstate:open(from, to)
+ self:set_status(self.iconvstate:open(from, to))
 end
